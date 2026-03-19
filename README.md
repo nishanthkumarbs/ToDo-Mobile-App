@@ -25,6 +25,12 @@ A premium, feature-rich Todo List application built with **React Native** and **
 -   **UI Components**: [react-native-calendars](https://github.com/wix/react-native-calendars), Ionicons
 -   **Backend**: Spring Boot REST API (Deployed on Render)
 
+## 📲 Download the App
+
+You can download the latest Android APK directly from the link below:
+
+**[Download To Do APK (v1.0.0)](https://expo.dev/artifacts/eas/rLfGy7Z9LvnEKx5GGTN3h2.apk)**
+
 ## 📦 Installation & Setup
 
 1. **Clone the repository**:
