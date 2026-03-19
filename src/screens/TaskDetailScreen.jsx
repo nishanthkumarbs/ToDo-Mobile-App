@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   View, Text, StyleSheet, TextInput, TouchableOpacity, 
-  ScrollView, Alert, ActivityIndicator 
+  ScrollView, Alert, ActivityIndicator, Modal 
 } from 'react-native';
 import { updateTodo, deleteTodo, createTodo } from '../services/api';
 import { colors, priorityColors } from '../theme/colors';
@@ -21,6 +21,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
   const [reminder, setReminder] = useState(task.reminder ? new Date(task.reminder) : null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleUpdate = async () => {
@@ -194,21 +195,15 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
             </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Recurring</Text>
           </View>
-          <View style={styles.prioritySelector}>
-            {['none', 'daily', 'weekly', 'monthly'].map(r => (
-              <TouchableOpacity
-                key={r}
-                style={[
-                  styles.priorityOption,
-                  { borderColor: theme.border },
-                  recurring === r ? { backgroundColor: theme.primary + '20', borderColor: theme.primary } : null
-                ]}
-                onPress={() => setRecurring(r)}
-              >
-                <Text style={{ color: recurring === r ? theme.primary : theme.textSecondary, fontSize: 10 }}>{r.charAt(0).toUpperCase() + r.slice(1)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <TouchableOpacity 
+            style={[styles.dropdownButton, { borderColor: theme.border }]}
+            onPress={() => setShowRecurringModal(true)}
+          >
+            <Text style={{ color: theme.text, fontSize: 14 }}>
+              {recurring.charAt(0).toUpperCase() + recurring.slice(1)}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={theme.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.divider} />
@@ -265,6 +260,46 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
             }}
           />
         )}
+        
+        {/* Recurring Modal Dropdown */}
+        <Modal
+          visible={showRecurringModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowRecurringModal(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setShowRecurringModal(false)}
+          >
+            <View style={[styles.dropdownContent, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              {['none', 'daily', 'weekly', 'monthly'].map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[
+                    styles.dropdownItem,
+                    recurring === r ? { backgroundColor: theme.primary + '15' } : null
+                  ]}
+                  onPress={() => {
+                    setRecurring(r);
+                    setShowRecurringModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.dropdownItemText, 
+                    { color: recurring === r ? theme.primary : theme.text }
+                  ]}>
+                    {r.charAt(0).toUpperCase() + r.slice(1)}
+                  </Text>
+                  {recurring === r && (
+                    <Ionicons name="checkmark" size={20} color={theme.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
 
       <View style={styles.actionButtons}>
@@ -360,6 +395,45 @@ const styles = StyleSheet.create({
   },
   datePickerButton: {
     padding: 8,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 110,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  dropdownContent: {
+    width: '80%',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 8,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 8,
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   actionButtons: {
     gap: 12,
