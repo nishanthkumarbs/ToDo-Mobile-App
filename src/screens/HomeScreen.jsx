@@ -33,8 +33,10 @@ export default function HomeScreen({ navigation, isDark }) {
   const [newTaskPriority, setNewTaskPriority] = useState('low');
   const [newTaskDueDate, setNewTaskDueDate] = useState(null);
   const [newTaskReminder, setNewTaskReminder] = useState(null);
+  const [newTaskRecurring, setNewTaskRecurring] = useState('none');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
   
   const theme = isDark ? colors.dark : colors.light;
 
@@ -81,7 +83,7 @@ export default function HomeScreen({ navigation, isDark }) {
         priority: newTaskPriority,
         dueDate: newTaskDueDate ? newTaskDueDate.toISOString() : null,
         reminder: newTaskReminder ? newTaskReminder.toISOString() : null,
-        repeat: 'none',
+        repeat: newTaskRecurring,
         userId: user.id
       };
 
@@ -112,6 +114,7 @@ export default function HomeScreen({ navigation, isDark }) {
       setNewTaskPriority('low');
       setNewTaskDueDate(null);
       setNewTaskReminder(null);
+      setNewTaskRecurring('none');
       onRefresh();
     } catch (error) {
       console.error("Error creating todo:", error);
@@ -386,30 +389,17 @@ export default function HomeScreen({ navigation, isDark }) {
                 </Text>
               </TouchableOpacity>
             </View>
-
             <View style={styles.settingRow}>
                <View style={styles.settingLabel}>
-                 <Ionicons name="notifications-outline" size={20} color={theme.textSecondary} />
-                 <Text style={[styles.modalLabel, { color: theme.textSecondary, marginBottom: 0 }]}>Reminder</Text>
+                 <Ionicons name="repeat-outline" size={20} color={theme.textSecondary} />
+                 <Text style={[styles.modalLabel, { color: theme.textSecondary, marginBottom: 0 }]}>Recurring</Text>
                </View>
                <TouchableOpacity 
                  style={styles.datePickerButton}
-                 onPress={() => {
-                  if (Platform.OS === 'android') {
-                    DateTimePickerAndroid.open({
-                      value: newTaskReminder || new Date(),
-                      mode: 'time',
-                      onChange: (event, date) => {
-                        if (event.type === 'set' && date) setNewTaskReminder(date);
-                      }
-                    });
-                  } else {
-                    setShowReminderPicker(true);
-                  }
-                 }}
+                 onPress={() => setShowRecurringModal(true)}
                >
-                 <Text style={{ color: newTaskReminder ? theme.primary : theme.textSecondary }}>
-                   {newTaskReminder ? newTaskReminder.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Set Reminder'}
+                 <Text style={{ color: newTaskRecurring !== 'none' ? theme.primary : theme.textSecondary }}>
+                   {newTaskRecurring === 'none' ? 'None' : newTaskRecurring.charAt(0).toUpperCase() + newTaskRecurring.slice(1)}
                  </Text>
                </TouchableOpacity>
             </View>
@@ -452,6 +442,46 @@ export default function HomeScreen({ navigation, isDark }) {
                 <Text style={{ color: 'white' }}>Create</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showRecurringModal}
+        onRequestClose={() => setShowRecurringModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setShowRecurringModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Repeat Task</Text>
+            {['none', 'daily', 'weekly', 'monthly'].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.recurringOption,
+                  { borderBottomColor: theme.border }
+                ]}
+                onPress={() => {
+                  setNewTaskRecurring(option);
+                  setShowRecurringModal(false);
+                }}
+              >
+                <Text style={{ 
+                  color: newTaskRecurring === option ? theme.primary : theme.text,
+                  fontWeight: newTaskRecurring === option ? 'bold' : 'normal'
+                }}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </Text>
+                {newTaskRecurring === option && (
+                  <Ionicons name="checkmark" size={20} color={theme.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -632,5 +662,12 @@ const styles = StyleSheet.create({
   },
   datePickerButton: {
     padding: 8,
+  },
+  recurringOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
   },
 });
