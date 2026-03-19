@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ToDo-Mobile",
+    "name": "To Do",
     "slug": "ToDo-Mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,12 +18,21 @@
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+        "backgroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-foreground.png"
+      },
+      "package": "com.devdrifter.ToDoMobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8f5c6ac8-410e-4de9-a1eb-471d47561c0d"
+      }
     }
   }
 }

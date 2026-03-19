@@ -1,0 +1,378 @@
+import React, { useState } from 'react';
+import { 
+  View, Text, StyleSheet, TextInput, TouchableOpacity, 
+  ScrollView, Alert, ActivityIndicator 
+} from 'react-native';
+import { updateTodo, deleteTodo, createTodo } from '../services/api';
+import { colors, priorityColors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
+
+export default function TaskDetailScreen({ route, navigation, isDark }) {
+  const { task } = route.params;
+  const theme = isDark ? colors.dark : colors.light;
+
+  const [title, setTitle] = useState(task.title);
+  const [priority, setPriority] = useState(task.priority);
+  const [completed, setCompleted] = useState(task.completed);
+  const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate) : null);
+  const [recurring, setRecurring] = useState(task.repeat || 'none');
+  const [reminder, setReminder] = useState(task.reminder ? new Date(task.reminder) : null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleUpdate = async () => {
+    setLoading(true);
+    try {
+      await updateTodo(task.id, {
+        title,
+        priority,
+        completed,
+        dueDate: dueDate ? dueDate.toISOString() : null,
+        repeat: recurring,
+        reminder: reminder ? reminder.toISOString() : null,
+        userId: task.userId
+      });
+
+      // Handle Recurring Task recreation if just marked as completed
+      if (!task.completed && completed && recurring !== 'none') {
+        let newDueDate = null;
+        let newReminder = null;
+
+        if (dueDate) {
+          const d = new Date(dueDate);
+          if (recurring === 'daily') d.setDate(d.getDate() + 1);
+          if (recurring === 'weekly') d.setDate(d.getDate() + 7);
+          if (recurring === 'monthly') d.setMonth(d.getMonth() + 1);
+          newDueDate = d.toISOString();
+        }
+
+        if (reminder) {
+          const r = new Date(reminder);
+          if (recurring === 'daily') r.setDate(r.getDate() + 1);
+          if (recurring === 'weekly') r.setDate(r.getDate() + 7);
+          if (recurring === 'monthly') r.setMonth(r.getMonth() + 1);
+          newReminder = r.toISOString();
+        }
+
+        await createTodo({
+          title,
+          priority,
+          completed: false, // next occurrence is pending
+          dueDate: newDueDate,
+          repeat: recurring,
+          reminder: newReminder,
+          userId: task.userId
+        });
+      }
+
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to update task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Task",
+      "Are you sure you want to delete this task?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteTodo(task.id);
+              navigation.goBack();
+            } catch (error) {
+              console.error(error);
+              Alert.alert('Error', 'Failed to delete task');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        
+        <View style={styles.headerRow}>
+          <TouchableOpacity 
+            style={styles.checkbox}
+            onPress={() => setCompleted(!completed)}
+          >
+            <Ionicons 
+              name={completed ? "checkmark-circle" : "ellipse-outline"} 
+              size={32} 
+              color={completed ? theme.success : theme.textSecondary} 
+            />
+          </TouchableOpacity>
+          <TextInput
+            style={[
+              styles.titleInput, 
+              { color: theme.text, textDecorationLine: completed ? 'line-through' : 'none' }
+            ]}
+            value={title}
+            onChangeText={setTitle}
+            multiline
+          />
+        </View>
+
+      </View>
+
+      <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        
+        <View style={styles.settingRow}>
+          <View style={styles.settingLabel}>
+            <Ionicons name="flag-outline" size={20} color={theme.textSecondary} />
+            <Text style={[styles.settingText, { color: theme.text }]}>Priority</Text>
+          </View>
+          <View style={styles.prioritySelector}>
+            {['low', 'medium', 'high'].map(p => (
+              <TouchableOpacity
+                key={p}
+                style={[
+                  styles.priorityOption,
+                  { borderColor: priorityColors[p] },
+                  priority === p ? { backgroundColor: priorityColors[p] + '20' } : null
+                ]}
+                onPress={() => setPriority(p)}
+              >
+                <Text style={{ color: priorityColors[p], fontSize: 12 }}>{p.toUpperCase()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingLabel}>
+            <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
+            <Text style={[styles.settingText, { color: theme.text }]}>Due Date</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.datePickerButton}
+            onPress={() => {
+              if (Platform.OS === 'android') {
+                DateTimePickerAndroid.open({
+                  value: dueDate || new Date(),
+                  mode: 'date',
+                  onChange: (event, date) => {
+                    if (event.type === 'set' && date) setDueDate(date);
+                  }
+                });
+              } else {
+                setShowDatePicker(true);
+              }
+            }}
+          >
+            <Text style={{ color: dueDate ? theme.primary : theme.textSecondary }}>
+              {dueDate ? dueDate.toLocaleDateString() : 'Set Date'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingLabel}>
+            <Ionicons name="repeat-outline" size={20} color={theme.textSecondary} />
+            <Text style={[styles.settingText, { color: theme.text }]}>Recurring</Text>
+          </View>
+          <View style={styles.prioritySelector}>
+            {['none', 'daily', 'weekly', 'monthly'].map(r => (
+              <TouchableOpacity
+                key={r}
+                style={[
+                  styles.priorityOption,
+                  { borderColor: theme.border },
+                  recurring === r ? { backgroundColor: theme.primary + '20', borderColor: theme.primary } : null
+                ]}
+                onPress={() => setRecurring(r)}
+              >
+                <Text style={{ color: recurring === r ? theme.primary : theme.textSecondary, fontSize: 10 }}>{r.charAt(0).toUpperCase() + r.slice(1)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingLabel}>
+            <Ionicons name="notifications-outline" size={20} color={theme.textSecondary} />
+            <Text style={[styles.settingText, { color: theme.text }]}>Reminder</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.datePickerButton}
+            onPress={() => {
+              if (Platform.OS === 'android') {
+                DateTimePickerAndroid.open({
+                  value: reminder || new Date(),
+                  mode: 'time',
+                  onChange: (event, date) => {
+                    if (event.type === 'set' && date) setReminder(date);
+                  }
+                });
+              } else {
+                setShowReminderPicker(true);
+              }
+            }}
+          >
+            <Text style={{ color: reminder ? theme.primary : theme.textSecondary }}>
+              {reminder ? reminder.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Set Reminder'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {Platform.OS === 'ios' && showDatePicker && (
+          <DateTimePicker
+            value={dueDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, date) => {
+              setShowDatePicker(false);
+              if (event.type === 'set' && date) setDueDate(date);
+            }}
+          />
+        )}
+        
+        {Platform.OS === 'ios' && showReminderPicker && (
+          <DateTimePicker
+            value={reminder || new Date()}
+            mode="time"
+            display="default"
+            onChange={(event, date) => {
+              setShowReminderPicker(false);
+              if (event.type === 'set' && date) setReminder(date);
+            }}
+          />
+        )}
+      </View>
+
+      <View style={styles.actionButtons}>
+        <TouchableOpacity 
+          style={[styles.saveButton, { backgroundColor: theme.primary }]}
+          onPress={handleUpdate}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.deleteButton, { borderColor: theme.danger }]}
+          onPress={handleDelete}
+        >
+          <Ionicons name="trash-outline" size={20} color={theme.danger} />
+          <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Task</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  section: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    marginRight: 12,
+  },
+  titleInput: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#00000010',
+    marginVertical: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  descriptionInput: {
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  settingLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  settingText: {
+    fontSize: 16,
+  },
+  prioritySelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  priorityOption: {
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  datePickerButton: {
+    padding: 8,
+  },
+  actionButtons: {
+    gap: 12,
+    marginBottom: 40,
+  },
+  saveButton: {
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
