@@ -4,6 +4,7 @@ import {
   ScrollView, Alert, ActivityIndicator, Modal 
 } from 'react-native';
 import { updateTodo, deleteTodo, createTodo } from '../services/api';
+import { handleRecurringTask } from '../utils/todoUtils';
 import { colors, priorityColors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -68,33 +69,13 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
       // Handle Recurring Task recreation if just marked as completed
       if (!task.completed && completed && recurring !== 'none') {
         try {
-          let newDueDate = null;
-          let newReminder = null;
-
-          if (dueDate) {
-            const d = new Date(dueDate);
-            if (recurring === 'daily') d.setDate(d.getDate() + 1);
-            if (recurring === 'weekly') d.setDate(d.getDate() + 7);
-            if (recurring === 'monthly') d.setMonth(d.getMonth() + 1);
-            newDueDate = d.toISOString();
-          }
-
-          if (reminder) {
-            const r = new Date(reminder);
-            if (recurring === 'daily') r.setDate(r.getDate() + 1);
-            if (recurring === 'weekly') r.setDate(r.getDate() + 7);
-            if (recurring === 'monthly') r.setMonth(r.getMonth() + 1);
-            newReminder = r.toISOString();
-          }
-
-          await createTodo({
+          await handleRecurringTask({
+            ...task,
             title,
             priority,
-            completed: false, // next occurrence is pending
-            dueDate: newDueDate,
+            dueDate: dueDate ? dueDate.toISOString() : null,
             repeat: recurring,
-            reminder: newReminder,
-            userId: task.userId
+            reminder: reminder ? reminder.toISOString() : null,
           });
         } catch (recurringError) {
           console.error("Failed to create next recurring task:", recurringError);

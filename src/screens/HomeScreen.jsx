@@ -3,7 +3,8 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
   ActivityIndicator, TextInput, Modal, SafeAreaView, RefreshControl
 } from 'react-native';
-import { getTodos, deleteTodo, createTodo } from '../services/api';
+import { getTodos, deleteTodo, createTodo, updateTodo } from '../services/api';
+import { handleRecurringTask } from '../utils/todoUtils';
 import { getSessionUser } from '../services/auth';
 import { colors, priorityColors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -136,17 +137,79 @@ export default function HomeScreen({ navigation, isDark }) {
       return 0;
     });
 
+  const handleToggleComplete = async (item) => {
+    const newCompletedStatus = !item.completed;
+    try {
+      // 1. Update the task
+      await updateTodo(item.id, {
+        ...item,
+        completed: newCompletedStatus
+      });
+
+      // 2. Handle Notifications (Skip in Expo Go)
+      if (!isExpoGo && Notifications) {
+        try {
+          if (newCompletedStatus) {
+            // Task completed, cancel any pending notifications
+            await Notifications.cancelAllScheduledNotificationsAsync();
+          } else if (item.reminder && new Date(item.reminder) > new Date()) {
+            // Task uncompleted, reschedule notification if reminder is in the future
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "⏰ Task Reminder",
+                body: `It's time for: ${item.title}`,
+                data: { todoId: item.id },
+              },
+              trigger: new Date(item.reminder),
+            });
+          }
+        } catch (notificationError) {
+          console.error("Failed to update notification during toggle:", notificationError);
+        }
+      }
+
+      // 3. Handle Recurring logic
+      if (!item.completed && newCompletedStatus && item.repeat && item.repeat !== 'none') {
+        const nextOccurrence = await handleRecurringTask(item);
+        if (nextOccurrence && !isExpoGo && Notifications && nextOccurrence.data.reminder) {
+          const trigger = new Date(nextOccurrence.data.reminder);
+          if (trigger > new Date()) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "⏰ Task Reminder",
+                body: `It's time for: ${nextOccurrence.data.title}`,
+                data: { todoId: nextOccurrence.data.id },
+              },
+              trigger,
+            });
+          }
+        }
+      }
+
+      // 4. Update UI
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to toggle task completion:", error);
+      Alert.alert('Error', 'Failed to update task status');
+    }
+  };
+
   const renderTodoItem = ({ item }) => (
     <TouchableOpacity 
       style={[styles.todoItem, { backgroundColor: theme.surface, borderColor: theme.border }]}
       onPress={() => navigation.navigate('TaskDetail', { task: item })}
     >
       <View style={styles.todoItemLeft}>
-        <Ionicons 
-          name={item.completed ? "checkmark-circle" : "ellipse-outline"} 
-          size={24} 
-          color={item.completed ? theme.success : theme.textSecondary} 
-        />
+        <TouchableOpacity 
+          style={styles.checkboxTouch} 
+          onPress={() => handleToggleComplete(item)}
+        >
+          <Ionicons 
+            name={item.completed ? "checkmark-circle" : "ellipse-outline"} 
+            size={24} 
+            color={item.completed ? theme.success : theme.textSecondary} 
+          />
+        </TouchableOpacity>
         <View style={styles.todoTextContainer}>
           <Text style={[styles.todoTitle, { color: theme.text, textDecorationLine: item.completed ? 'line-through' : 'none' }]} numberOfLines={1}>
             {item.title}
@@ -458,6 +521,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+  },
+  checkboxTouch: {
+    padding: 8,
+    marginLeft: -8,
   },
   todoTextContainer: {
     marginLeft: 12,
