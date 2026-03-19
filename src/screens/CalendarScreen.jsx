@@ -103,6 +103,7 @@ export default function CalendarScreen({ navigation, isDark }) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <Calendar
+        key={isDark ? 'dark' : 'light'}
         theme={{
           backgroundColor: theme.background,
           calendarBackground: theme.surface,
@@ -120,9 +121,6 @@ export default function CalendarScreen({ navigation, isDark }) {
           textDayFontWeight: '500',
           textMonthFontWeight: 'bold',
           textDayHeaderFontWeight: '600',
-          // Header icons/text color for dark mode
-          monthTextColor: theme.text,
-          textSectionTitleColor: theme.textSecondary,
         }}
         markedDates={markedDates}
         onDayPress={onDayPress}
