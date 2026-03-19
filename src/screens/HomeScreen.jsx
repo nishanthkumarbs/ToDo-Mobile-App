@@ -88,16 +88,21 @@ export default function HomeScreen({ navigation, isDark }) {
       
       // Schedule native notification if reminder is set (Skip in Expo Go)
       if (newTodo.reminder && !isExpoGo && Notifications) {
-        const trigger = new Date(newTodo.reminder);
-        if (trigger > new Date()) {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "⏰ Task Reminder",
-              body: `It's time for: ${newTodo.title}`,
-              data: { todoId: response.data.id },
-            },
-            trigger,
-          });
+        try {
+          const trigger = new Date(newTodo.reminder);
+          if (trigger > new Date()) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "⏰ Task Reminder",
+                body: `It's time for: ${newTodo.title}`,
+                data: { todoId: response.data.id },
+              },
+              trigger,
+            });
+          }
+        } catch (notificationError) {
+          console.error("Failed to schedule notification:", notificationError);
+          // Don't throw - we want the UI to refresh even if notification fails
         }
       }
 

@@ -46,51 +46,59 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
 
       // Manage notifications on update (Skip in Expo Go)
       if (!isExpoGo && Notifications) {
-        // 1. Cancel any existing notification for this task
-        await Notifications.cancelAllScheduledNotificationsAsync(); 
-        
-        if (!completed && reminder && new Date(reminder) > new Date()) {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "⏰ Task Reminder",
-              body: `It's time for: ${title}`,
-              data: { todoId: task.id },
-            },
-            trigger: new Date(reminder),
-          });
+        try {
+          // 1. Cancel any existing notification for this task
+          await Notifications.cancelAllScheduledNotificationsAsync(); 
+          
+          if (!completed && reminder && new Date(reminder) > new Date()) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "⏰ Task Reminder",
+                body: `It's time for: ${title}`,
+                data: { todoId: task.id },
+              },
+              trigger: new Date(reminder),
+            });
+          }
+        } catch (err) {
+          console.error("Notification management failed:", err);
         }
       }
 
       // Handle Recurring Task recreation if just marked as completed
       if (!task.completed && completed && recurring !== 'none') {
-        let newDueDate = null;
-        let newReminder = null;
+        try {
+          let newDueDate = null;
+          let newReminder = null;
 
-        if (dueDate) {
-          const d = new Date(dueDate);
-          if (recurring === 'daily') d.setDate(d.getDate() + 1);
-          if (recurring === 'weekly') d.setDate(d.getDate() + 7);
-          if (recurring === 'monthly') d.setMonth(d.getMonth() + 1);
-          newDueDate = d.toISOString();
+          if (dueDate) {
+            const d = new Date(dueDate);
+            if (recurring === 'daily') d.setDate(d.getDate() + 1);
+            if (recurring === 'weekly') d.setDate(d.getDate() + 7);
+            if (recurring === 'monthly') d.setMonth(d.getMonth() + 1);
+            newDueDate = d.toISOString();
+          }
+
+          if (reminder) {
+            const r = new Date(reminder);
+            if (recurring === 'daily') r.setDate(r.getDate() + 1);
+            if (recurring === 'weekly') r.setDate(r.getDate() + 7);
+            if (recurring === 'monthly') r.setMonth(r.getMonth() + 1);
+            newReminder = r.toISOString();
+          }
+
+          await createTodo({
+            title,
+            priority,
+            completed: false, // next occurrence is pending
+            dueDate: newDueDate,
+            repeat: recurring,
+            reminder: newReminder,
+            userId: task.userId
+          });
+        } catch (recurringError) {
+          console.error("Failed to create next recurring task:", recurringError);
         }
-
-        if (reminder) {
-          const r = new Date(reminder);
-          if (recurring === 'daily') r.setDate(r.getDate() + 1);
-          if (recurring === 'weekly') r.setDate(r.getDate() + 7);
-          if (recurring === 'monthly') r.setMonth(r.getMonth() + 1);
-          newReminder = r.toISOString();
-        }
-
-        await createTodo({
-          title,
-          priority,
-          completed: false, // next occurrence is pending
-          dueDate: newDueDate,
-          repeat: recurring,
-          reminder: newReminder,
-          userId: task.userId
-        });
       }
 
       navigation.goBack();
