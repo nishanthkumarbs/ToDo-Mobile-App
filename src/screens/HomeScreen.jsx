@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform, Alert } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 export default function HomeScreen({ navigation, isDark }) {
   const [todos, setTodos] = useState([]);
@@ -56,31 +57,8 @@ export default function HomeScreen({ navigation, isDark }) {
     fetchTodosData();
   }, []);
 
-  // Set up in-app foreground reminders (matching web app behavior)
-  useEffect(() => {
-    const timeouts = [];
-
-    todos.forEach((todo) => {
-      if (!todo.reminder || todo.completed) return;
-
-      const reminderTime = new Date(todo.reminder).getTime();
-      const now = Date.now();
-      const delay = reminderTime - now;
-
-      // Only schedule future reminders within the maximum setTimeout limit (~24 days)
-      if (delay > 0 && delay <= 2147483647) {
-        const timeout = setTimeout(() => {
-          Alert.alert("⏰ Task Reminder", `It's time for your task:\n\n${todo.title}`);
-        }, delay);
-
-        timeouts.push(timeout);
-      }
-    });
-
-    return () => {
-      timeouts.forEach((timeout) => clearTimeout(timeout));
-    };
-  }, [todos]);
+  // In-app reminders are now handled by native expo-notifications scheduled on creation/edit
+  // This useEffect could be used to sync notifications, but for simplicity we schedule on write.
 
   const handleCreateTodo = async () => {
     if (!newTaskTitle.trim()) return;
@@ -100,7 +78,23 @@ export default function HomeScreen({ navigation, isDark }) {
         userId: user.id
       };
 
-      await createTodo(newTodo);
+      const response = await createTodo(newTodo);
+      
+      // Schedule native notification if reminder is set
+      if (newTodo.reminder) {
+        const trigger = new Date(newTodo.reminder);
+        if (trigger > new Date()) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "⏰ Task Reminder",
+              body: `It's time for: ${newTodo.title}`,
+              data: { todoId: response.data.id },
+            },
+            trigger,
+          });
+        }
+      }
+
       setModalVisible(false);
       setNewTaskTitle('');
       setNewTaskPriority('low');
