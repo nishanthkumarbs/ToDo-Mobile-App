@@ -10,7 +10,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform, Alert } from 'react-native';
-import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+let Notifications;
+if (!isExpoGo) {
+  Notifications = require('expo-notifications');
+}
 
 export default function HomeScreen({ navigation, isDark }) {
   const [todos, setTodos] = useState([]);
@@ -80,8 +86,8 @@ export default function HomeScreen({ navigation, isDark }) {
 
       const response = await createTodo(newTodo);
       
-      // Schedule native notification if reminder is set
-      if (newTodo.reminder) {
+      // Schedule native notification if reminder is set (Skip in Expo Go)
+      if (newTodo.reminder && !isExpoGo && Notifications) {
         const trigger = new Date(newTodo.reminder);
         if (trigger > new Date()) {
           await Notifications.scheduleNotificationAsync({

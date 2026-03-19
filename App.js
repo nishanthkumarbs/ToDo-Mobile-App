@@ -5,22 +5,34 @@ import { useState, useEffect } from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
 import { colors } from './src/theme/colors';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
-// Configure notification behavior for foreground reception
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Detect if app is running in Expo Go
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+// Dynamically load notifications only if NOT in Expo Go
+let Notifications;
+if (!isExpoGo) {
+  Notifications = require('expo-notifications');
+  
+  // Configure notification behavior for foreground reception
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export default function App() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     async function requestPermissions() {
+      // Skip notification permission request in Expo Go
+      if (isExpoGo || !Notifications) return;
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
       if (existingStatus !== 'granted') {
