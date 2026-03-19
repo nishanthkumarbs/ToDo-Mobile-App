@@ -132,7 +132,9 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
         
         <View style={styles.settingRow}>
           <View style={styles.settingLabel}>
-            <Ionicons name="flag-outline" size={20} color={theme.textSecondary} />
+            <View style={styles.iconContainer}>
+              <Ionicons name="flag-outline" size={20} color={theme.textSecondary} />
+            </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Priority</Text>
           </View>
           <View style={styles.prioritySelector}>
@@ -156,7 +158,9 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingLabel}>
-            <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
+            <View style={styles.iconContainer}>
+              <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
+            </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Due Date</Text>
           </View>
           <TouchableOpacity 
@@ -185,7 +189,9 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingLabel}>
-            <Ionicons name="repeat-outline" size={20} color={theme.textSecondary} />
+            <View style={styles.iconContainer}>
+              <Ionicons name="repeat-outline" size={20} color={theme.textSecondary} />
+            </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Recurring</Text>
           </View>
           <View style={styles.prioritySelector}>
@@ -209,7 +215,9 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingLabel}>
-            <Ionicons name="notifications-outline" size={20} color={theme.textSecondary} />
+            <View style={styles.iconContainer}>
+              <Ionicons name="notifications-outline" size={20} color={theme.textSecondary} />
+            </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Reminder</Text>
           </View>
           <TouchableOpacity 
@@ -330,10 +338,15 @@ const styles = StyleSheet.create({
   settingLabel: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+  },
+  iconContainer: {
+    width: 32,
+    alignItems: 'center',
+    marginRight: 4,
   },
   settingText: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
   },
   prioritySelector: {
     flexDirection: 'row',
