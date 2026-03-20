@@ -56,6 +56,15 @@ export default function HomeScreen({ navigation, isDark }) {
     }
   };
 
+  const resetForm = () => {
+    setNewTaskTitle('');
+    setNewTaskDescription('');
+    setNewTaskPriority('low');
+    setNewTaskDueDate(null);
+    setNewTaskReminder(null);
+    setNewTaskRecurring('none');
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchTodosData();
