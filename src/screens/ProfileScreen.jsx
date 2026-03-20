@@ -100,7 +100,7 @@ export default function ProfileScreen({ isDark, setIsDark, setUser }) {
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
               <Ionicons name="person-outline" size={24} color={theme.text} />
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={[styles.settingText, { color: theme.text }]}>Full Name</Text>
                 {isEditingName ? (
                   <View style={styles.editRow}>
@@ -292,10 +292,10 @@ const styles = StyleSheet.create({
   smallInput: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 14,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
   },
   passwordForm: {
     marginTop: 8,
