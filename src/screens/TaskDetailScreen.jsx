@@ -232,7 +232,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
         <View style={styles.settingRow}>
           <View style={styles.settingLabel}>
             <View style={styles.iconContainer}>
-            <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Reminder: </Text>
+              <Ionicons name="notifications-outline" size={20} color={theme.textSecondary} />
             </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Reminder</Text>
           </View>
