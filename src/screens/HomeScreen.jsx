@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  ActivityIndicator, TextInput, Modal, SafeAreaView, RefreshControl
+  ActivityIndicator, TextInput, Modal, SafeAreaView, RefreshControl, ScrollView
 } from 'react-native';
 import { getTodos, deleteTodo, createTodo, updateTodo } from '../services/api';
 import { handleRecurringTask } from '../utils/todoUtils';
@@ -261,42 +261,54 @@ export default function HomeScreen({ navigation, isDark }) {
       </View>
 
       <View style={styles.filterContainer}>
-        {['all', 'pending', 'completed'].map(f => (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.filterScroll}
+        >
+          {['all', 'pending', 'completed'].map(f => (
+            <TouchableOpacity
+              key={f}
+              style={[
+                styles.filterChip,
+                filter === f ? { backgroundColor: theme.primary } : { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }
+              ]}
+              onPress={() => setFilter(f)}
+            >
+              <Text style={[
+                styles.filterText,
+                filter === f ? { color: 'white' } : { color: theme.textSecondary }
+              ]}>
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          
+          <View style={styles.filterDivider} />
+          
           <TouchableOpacity
-            key={f}
             style={[
-              styles.filterChip,
-              filter === f ? { backgroundColor: theme.primary } : { backgroundColor: theme.surface, borderColor: theme.border }
+              styles.filterChip, 
+              sortBy !== 'none' ? { backgroundColor: theme.primary } : { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }
             ]}
-            onPress={() => setFilter(f)}
+            onPress={() => {
+              const nextSort = sortBy === 'none' ? 'date' : sortBy === 'date' ? 'priority' : 'none';
+              setSortBy(nextSort);
+            }}
           >
+            <Ionicons 
+              name="swap-vertical" 
+              size={14} 
+              color={sortBy !== 'none' ? 'white' : theme.textSecondary} 
+            />
             <Text style={[
-              styles.filterText,
-              filter === f ? { color: 'white' } : { color: theme.textSecondary }
+              styles.filterText, 
+              { color: sortBy !== 'none' ? 'white' : theme.textSecondary, marginLeft: 6 }
             ]}>
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {sortBy === 'none' ? 'Sort' : sortBy === 'date' ? 'Date' : 'Priority'}
             </Text>
           </TouchableOpacity>
-        ))}
-        
-        <View style={{ flex: 1 }} />
-        
-        <TouchableOpacity
-          style={[styles.filterChip, { backgroundColor: sortBy !== 'none' ? theme.primary : theme.surface, borderColor: theme.border }]}
-          onPress={() => {
-            const nextSort = sortBy === 'none' ? 'date' : sortBy === 'date' ? 'priority' : 'none';
-            setSortBy(nextSort);
-          }}
-        >
-          <Ionicons 
-            name="swap-vertical" 
-            size={14} 
-            color={sortBy !== 'none' ? 'white' : theme.textSecondary} 
-          />
-          <Text style={[styles.filterText, { color: sortBy !== 'none' ? 'white' : theme.textSecondary, marginLeft: 4 }]}>
-            {sortBy === 'none' ? 'Sort' : sortBy === 'date' ? 'By Date' : 'By Rank'}
-          </Text>
-        </TouchableOpacity>
+        </ScrollView>
       </View>
 
       <FlatList
@@ -527,23 +539,33 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   filterContainer: {
-    flexDirection: 'row',
+    paddingVertical: 12,
+  },
+  filterScroll: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+    height: 36,
   },
   filterText: {
+    fontSize: 14,
     fontWeight: '600',
-    fontSize: 12,
   },
-  listContainer: {
-    padding: 16,
+  filterDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#00000020',
+    marginHorizontal: 4,
   },
   todoItem: {
     flexDirection: 'row',
