@@ -1,40 +1,123 @@
-import axios from "axios";
-import * as SecureStore from "expo-secure-store";
-
-// Use 10.0.2.2 for Android emulator to access localhost on host machine
-// If using Expo Go on a physical device, replace with your PC's IP address (e.g., http://192.168.1.100:8080/api)
-const API = axios.create({
-  baseURL: "https://todo-backend-lldg.onrender.com/api"
-});
-
-API.interceptors.request.use(async (req) => {
-  const token = await SecureStore.getItemAsync("token");
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
-  return req;
-});
+import { supabase } from "./supabase";
 
 /* ================= TODOS ================= */
-export const getTodos = (userId) => API.get(`/todos/user/${userId}`);
-export const createTodo = (todo) => API.post("/todos", todo);
-export const deleteTodo = (id) => API.delete(`/todos/${id}`);
-export const updateTodo = (id, updatedTodo) => API.put(`/todos/${id}`, updatedTodo);
+
+/**
+ * Fetches todos for a specific user.
+ */
+export const getTodos = async (userId) => {
+  const { data, error } = await supabase
+    .from('todos')
+    .select('*')
+    .eq('userId', userId)
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  return { data };
+};
+
+/**
+ * Creates a new todo.
+ */
+export const createTodo = async (todo) => {
+  const { data, error } = await supabase
+    .from('todos')
+    .insert([todo])
+    .select()
+    .single();
+    
+  if (error) throw error;
+  return { data };
+};
+
+/**
+ * Deletes a todo by ID.
+ */
+export const deleteTodo = async (id) => {
+  const { error } = await supabase
+    .from('todos')
+    .delete()
+    .eq('id', id);
+    
+  if (error) throw error;
+};
+
+/**
+ * Updates an existing todo.
+ */
+export const updateTodo = async (id, updatedTodo) => {
+  const { data, error } = await supabase
+    .from('todos')
+    .update(updatedTodo)
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  return { data };
+};
 
 /* ================= AUTH ================= */
+
+/**
+ * Registers a new user with Supabase Auth.
+ */
 export const registerUser = async (userData) => {
-  const res = await API.post("/auth/register", userData);
-  return res.data;
+  const { data, error } = await supabase.auth.signUp({
+    email: userData.email,
+    password: userData.password,
+    options: {
+      data: {
+        name: userData.name,
+      }
+    }
+  });
+  
+  if (error) throw error;
+  
+  return {
+    user: {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.user_metadata?.name || '',
+    },
+    token: data.session?.access_token || null
+  };
 };
 
+/**
+ * Logs in a user with Supabase Auth.
+ */
 export const loginUser = async (email, password) => {
-  const res = await API.post("/auth/login", { email, password });
-  return res.data;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  
+  if (error) throw error;
+  
+  return {
+    user: {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.user_metadata?.name || '',
+      avatar: data.user.user_metadata?.avatar_url || '',
+    },
+    token: data.session?.access_token
+  };
 };
 
+/**
+ * Updates user profile metadata in Supabase.
+ */
 export const updateUser = async (id, userData) => {
-  const res = await API.patch(`/users/${id}`, userData);
-  return res.data;
+  const { data, error } = await supabase.auth.updateUser({
+    data: userData
+  });
+  
+  if (error) throw error;
+  return data.user;
 };
 
-export default API;
+export default supabase;
+
