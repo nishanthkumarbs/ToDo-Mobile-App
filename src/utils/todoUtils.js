@@ -1,39 +1,10 @@
 import { createTodo } from '../services/api';
-import { Platform } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
-
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-/**
- * Plays a satisfying sound when a task is completed.
- */
-export const playCompletionSound = async () => {
-  try {
-    // Dynamic require to prevent crash if native module is missing
-    const { Audio } = require('expo-av');
-    
-    if (!Audio) return;
-
-    const { sound } = await Audio.Sound.createAsync(
-      { uri: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3' },
-      { shouldPlay: true, volume: 0.5 }
-    );
-    
-    // Automatically unload sound from memory when done
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (status.didJustFinish) {
-        sound.unloadAsync();
-      }
-    });
-  } catch (error) {
-    console.log("Error playing completion sound:", error);
-  }
-};
 
 /**
  * Handles the logic for creating the next occurrence of a recurring task.
-... (existing handleRecurringTask logic)
-**/
+ * @param {Object} task - The current task being completed.
+ * @returns {Promise<Object|null>} - The newly created todo response or null.
+ */
 export const handleRecurringTask = async (task) => {
   if (!task.repeat || task.repeat === 'none') return null;
 
@@ -59,7 +30,6 @@ export const handleRecurringTask = async (task) => {
   try {
     const response = await createTodo({
       title: task.title,
-      description: task.description,
       priority: task.priority,
       completed: false, // next occurrence is pending
       dueDate: newDueDate,
