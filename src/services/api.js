@@ -108,12 +108,24 @@ export const loginUser = async (email, password) => {
 };
 
 /**
- * Updates user profile metadata in Supabase.
+ * Updates user profile metadata or password in Supabase.
  */
 export const updateUser = async (id, userData) => {
-  const { data, error } = await supabase.auth.updateUser({
-    data: userData
-  });
+  const updatePayload = {};
+  
+  if (userData.password) {
+    updatePayload.password = userData.password;
+  }
+  
+  // Anything else goes into user_metadata
+  const metadata = { ...userData };
+  delete metadata.password;
+  
+  if (Object.keys(metadata).length > 0) {
+    updatePayload.data = metadata;
+  }
+
+  const { data, error } = await supabase.auth.updateUser(updatePayload);
   
   if (error) throw error;
   return data.user;
