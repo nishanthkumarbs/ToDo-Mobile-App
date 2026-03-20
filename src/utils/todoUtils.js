@@ -1,10 +1,31 @@
+import { Audio } from 'expo-av';
 import { createTodo } from '../services/api';
 
 /**
- * Handles the logic for creating the next occurrence of a recurring task.
- * @param {Object} task - The current task being completed.
- * @returns {Promise<Object|null>} - The newly created todo response or null.
+ * Plays a satisfying sound when a task is completed.
  */
+export const playCompletionSound = async () => {
+  try {
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3' },
+      { shouldPlay: true }
+    );
+    
+    // Automatically unload sound from memory when done
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.didJustFinish) {
+        sound.unloadAsync();
+      }
+    });
+  } catch (error) {
+    console.log("Error playing completion sound:", error);
+  }
+};
+
+/**
+ * Handles the logic for creating the next occurrence of a recurring task.
+... (existing handleRecurringTask logic)
+**/
 export const handleRecurringTask = async (task) => {
   if (!task.repeat || task.repeat === 'none') return null;
 
@@ -30,6 +51,7 @@ export const handleRecurringTask = async (task) => {
   try {
     const response = await createTodo({
       title: task.title,
+      description: task.description,
       priority: task.priority,
       completed: false, // next occurrence is pending
       dueDate: newDueDate,

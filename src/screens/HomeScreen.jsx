@@ -4,7 +4,7 @@ import {
   ActivityIndicator, TextInput, Modal, SafeAreaView, RefreshControl
 } from 'react-native';
 import { getTodos, deleteTodo, createTodo, updateTodo } from '../services/api';
-import { handleRecurringTask } from '../utils/todoUtils';
+import { handleRecurringTask, playCompletionSound } from '../utils/todoUtils';
 import { getSessionUser } from '../services/auth';
 import { colors, priorityColors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -141,6 +141,9 @@ export default function HomeScreen({ navigation, isDark }) {
     const newCompletedStatus = !item.completed;
     try {
       // 1. Update the task
+      if (newCompletedStatus) { // Play sound only when marking as completed
+        playCompletionSound();
+      }
       await updateTodo(item.id, {
         ...item,
         completed: newCompletedStatus

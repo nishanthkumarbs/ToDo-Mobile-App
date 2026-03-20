@@ -4,7 +4,7 @@ import {
   ScrollView, Alert, ActivityIndicator, Modal 
 } from 'react-native';
 import { updateTodo, deleteTodo, createTodo } from '../services/api';
-import { handleRecurringTask } from '../utils/todoUtils';
+import { handleRecurringTask, playCompletionSound } from '../utils/todoUtils';
 import { colors, priorityColors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -36,6 +36,9 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
   const handleUpdate = async () => {
     setLoading(true);
     try {
+      if (!task.completed && completed) {
+        playCompletionSound();
+      }
       await updateTodo(task.id, {
         title,
         description,
