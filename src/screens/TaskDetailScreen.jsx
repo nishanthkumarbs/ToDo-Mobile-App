@@ -9,13 +9,7 @@ import { colors, priorityColors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
-
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-let Notifications;
-if (!isExpoGo) {
-  Notifications = require('expo-notifications');
-}
+import { scheduleTaskNotification } from '../utils/notificationUtils';
 
 export default function TaskDetailScreen({ route, navigation, isDark }) {
   const { task } = route.params;
@@ -47,31 +41,20 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
         userId: task.userId
       });
 
-      // Manage notifications on update (Skip in Expo Go)
-      if (!isExpoGo && Notifications) {
-        try {
-          // 1. Cancel any existing notification for this task
-          await Notifications.cancelAllScheduledNotificationsAsync(); 
-          
-          if (!completed && reminder && new Date(reminder) > new Date()) {
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: "⏰ Task Reminder",
-                body: `It's time for: ${title}`,
-                data: { todoId: task.id },
-              },
-              trigger: new Date(reminder),
-            });
-          }
-        } catch (err) {
-          console.error("Notification management failed:", err);
-        }
+      // Manage notifications on update
+      if (!completed && reminder) {
+        await scheduleTaskNotification({
+          id: task.id,
+          title,
+          reminder: reminder.toISOString(),
+          completed
+        });
       }
 
       // Handle Recurring Task recreation if just marked as completed
       if (!task.completed && completed && recurring !== 'none') {
         try {
-          await handleRecurringTask({
+          const nextOccurrence = await handleRecurringTask({
             ...task,
             title,
             description,
@@ -80,6 +63,10 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
             repeat: recurring,
             reminder: reminder ? reminder.toISOString() : null,
           });
+          
+          if (nextOccurrence?.data?.reminder) {
+            await scheduleTaskNotification(nextOccurrence.data);
+          }
         } catch (recurringError) {
           console.error("Failed to create next recurring task:", recurringError);
         }
