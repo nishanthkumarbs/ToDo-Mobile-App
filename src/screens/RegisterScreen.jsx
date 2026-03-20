@@ -2,12 +2,32 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { registerUser } from '../services/api';
 import { colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation, setUser }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const RequirementItem = ({ met, text }) => (
+    <View style={styles.requirementRow}>
+      <Ionicons 
+        name={met ? "checkmark-circle" : "ellipse-outline"} 
+        size={16} 
+        color={met ? colors.light.primary : colors.light.textSecondary} 
+      />
+      <Text style={[styles.requirementText, { color: met ? colors.light.text : colors.light.textSecondary }]}>
+        {text}
+      </Text>
+    </View>
+  );
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
@@ -23,7 +43,15 @@ export default function RegisterScreen({ navigation, setUser }) {
       ]);
     } catch (error) {
       console.error(error);
-      Alert.alert('Registration Failed', error.response?.data?.message || 'Failed to create account');
+      let errorMessage = 'Failed to create account';
+      
+      if (error.message === 'email rate limit exceeded') {
+        errorMessage = 'Too many signup attempts. Please wait a while before trying again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Registration Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -53,13 +81,31 @@ export default function RegisterScreen({ navigation, setUser }) {
         />
 
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Create a password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Create a password"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity 
+            style={styles.eyeIcon} 
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons 
+              name={showPassword ? "eye-off-outline" : "eye-outline"} 
+              size={20} 
+              color={colors.light.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.checklistContainer}>
+          <RequirementItem met={hasLowercase} text="One Lowercase" />
+          <RequirementItem met={hasUppercase} text="One uppercase letter" />
+          <RequirementItem met={hasNumber} text="One number" />
+          <RequirementItem met={hasSpecialChar} text="One special character" />
+        </View>
 
         <TouchableOpacity 
           style={styles.registerButton} 
@@ -116,6 +162,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     color: colors.light.text,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.light.surface,
+    borderWidth: 1,
+    borderColor: colors.light.border,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+    color: colors.light.text,
+  },
+  eyeIcon: {
+    padding: 10,
+  },
+  checklistContainer: {
+    marginBottom: 20,
+    gap: 6,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  requirementText: {
+    fontSize: 13,
   },
   registerButton: {
     backgroundColor: colors.light.primary,

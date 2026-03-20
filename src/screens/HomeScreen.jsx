@@ -30,6 +30,7 @@ export default function HomeScreen({ navigation, isDark }) {
   // Add Task Modal State
   const [modalVisible, setModalVisible] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('low');
   const [newTaskDueDate, setNewTaskDueDate] = useState(null);
   const [newTaskReminder, setNewTaskReminder] = useState(null);
@@ -78,7 +79,7 @@ export default function HomeScreen({ navigation, isDark }) {
 
       const newTodo = {
         title: newTaskTitle,
-        description: '',
+        description: newTaskDescription,
         completed: false,
         priority: newTaskPriority,
         dueDate: newTaskDueDate ? newTaskDueDate.toISOString() : null,
@@ -110,11 +111,7 @@ export default function HomeScreen({ navigation, isDark }) {
       }
 
       setModalVisible(false);
-      setNewTaskTitle('');
-      setNewTaskPriority('low');
-      setNewTaskDueDate(null);
-      setNewTaskReminder(null);
-      setNewTaskRecurring('none');
+      resetForm();
       onRefresh();
     } catch (error) {
       console.error("Error creating todo:", error);
@@ -344,6 +341,16 @@ export default function HomeScreen({ navigation, isDark }) {
               value={newTaskTitle}
               onChangeText={setNewTaskTitle}
               autoFocus
+            />
+
+            <TextInput
+              style={[styles.modalInput, styles.textArea, { color: theme.text, borderColor: theme.border }]}
+              placeholder="Description (Optional)"
+              placeholderTextColor={theme.textSecondary}
+              value={newTaskDescription}
+              onChangeText={setNewTaskDescription}
+              multiline
+              numberOfLines={3}
             />
 
             <Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Priority</Text>
@@ -621,6 +628,10 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   modalLabel: {
     fontSize: 14,

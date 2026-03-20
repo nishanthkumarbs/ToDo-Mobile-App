@@ -22,6 +22,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
   const theme = isDark ? colors.dark : colors.light;
 
   const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || '');
   const [priority, setPriority] = useState(task.priority);
   const [completed, setCompleted] = useState(task.completed);
   const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate) : null);
@@ -37,6 +38,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
     try {
       await updateTodo(task.id, {
         title,
+        description,
         priority,
         completed,
         dueDate: dueDate ? dueDate.toISOString() : null,
@@ -72,6 +74,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
           await handleRecurringTask({
             ...task,
             title,
+            description,
             priority,
             dueDate: dueDate ? dueDate.toISOString() : null,
             repeat: recurring,
@@ -140,6 +143,24 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
           />
         </View>
 
+      </View>
+
+      <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={styles.settingLabel}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="document-text-outline" size={20} color={theme.textSecondary} />
+          </View>
+          <Text style={[styles.settingText, { color: theme.text }]}>Description</Text>
+        </View>
+        <View style={styles.divider} />
+        <TextInput
+          style={[styles.descriptionInput, { color: theme.text }]}
+          placeholder="Add a description..."
+          placeholderTextColor={theme.textSecondary}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
       </View>
 
       <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>

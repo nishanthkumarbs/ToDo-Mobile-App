@@ -3,11 +3,13 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator,
 import { loginUser } from '../services/api';
 import { saveSession, getSessionUser } from '../services/auth';
 import { colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { CommonActions } from '@react-navigation/native';
 
 export default function LoginScreen({ navigation, setUser }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -52,13 +54,25 @@ export default function LoginScreen({ navigation, setUser }) {
         />
 
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Enter your password"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity 
+            style={styles.eyeIcon} 
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons 
+              name={showPassword ? "eye-off-outline" : "eye-outline"} 
+              size={20} 
+              color={colors.light.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity 
           style={styles.loginButton} 
@@ -115,6 +129,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     color: colors.light.text,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.light.surface,
+    borderWidth: 1,
+    borderColor: colors.light.border,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+    color: colors.light.text,
+  },
+  eyeIcon: {
+    padding: 10,
   },
   loginButton: {
     backgroundColor: colors.light.primary,
