@@ -249,15 +249,31 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
             </View>
             <Text style={[styles.settingText, { color: theme.text }]}>Reminder</Text>
           </View>
-          <TouchableOpacity 
+           <TouchableOpacity 
             style={styles.datePickerButton}
             onPress={() => {
               if (Platform.OS === 'android') {
+                // Step 1: Open Date Picker
                 DateTimePickerAndroid.open({
                   value: reminder || new Date(),
-                  mode: 'time',
+                  mode: 'date',
                   onChange: (event, date) => {
-                    if (event.type === 'set' && date) setReminder(date);
+                    if (event.type === 'set' && date) {
+                      // Step 2: Open Time Picker on date selection
+                      const selectedDate = date;
+                      DateTimePickerAndroid.open({
+                        value: reminder || new Date(),
+                        mode: 'time',
+                        onChange: (timeEvent, time) => {
+                          if (timeEvent.type === 'set' && time) {
+                            const finalReminder = new Date(selectedDate);
+                            finalReminder.setHours(time.getHours());
+                            finalReminder.setMinutes(time.getMinutes());
+                            setReminder(finalReminder);
+                          }
+                        }
+                      });
+                    }
                   }
                 });
               } else {
@@ -286,7 +302,7 @@ export default function TaskDetailScreen({ route, navigation, isDark }) {
         {Platform.OS === 'ios' && showReminderPicker && (
           <DateTimePicker
             value={reminder || new Date()}
-            mode="time"
+            mode="datetime"
             display="default"
             onChange={(event, date) => {
               setShowReminderPicker(false);
