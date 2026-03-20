@@ -1,18 +1,19 @@
 # To Do - Mobile App
 
-A premium, feature-rich Todo List application built with **React Native** and **Expo**. This app connects to a custom Spring Boot backend to provide persistent task management with advanced features like recurring tasks, custom reminders, and a monthly calendar view.
+A premium, feature-rich Todo List application built with **React Native** and **Expo**. This app uses **Supabase** for robust authentication and persistent task management, featuring advanced recurring tasks, custom reminders, and a monthly calendar view.
 
 ![App Icon](./assets/icon.png)
 
 ## 🚀 Features
 
--   **Authentication**: Secure login and registration with JWT tokens stored via `expo-secure-store`.
--   **Task Management**: Full CRUD operations for tasks with titles and priority levels.
+-   **Authentication**: Secure login and registration powered by **Supabase Auth** with persistent session management.
+-   **Task Management**: Comprehensive CRUD operations with support for Task Titles and **Multiline Descriptions**.
+-   **Profile Settings**: Update your display name and change your password directly within the app.
 -   **Advanced Recurring Tasks**: Set tasks to repeat **Daily**, **Weekly**, or **Monthly**. The app automatically spawns the next occurrence when the current one is completed.
--   **Smart Reminders**: In-app foreground alerts that notify you at a specific time (matches web app behavior).
+-   **Smart Reminders**: Native background notifications that allow you to select both **Date and Time**.
 -   **Calendar View**: A dedicated monthly calendar to browse tasks by their due dates.
--   **Sorting & Filtering**: Sort tasks by Due Date or Priority Rank; filter by All, Pending, or Completed status.
--   **Dark Mode**: Full system-wide dark mode support with a premium aesthetic.
+-   **Sorting & Filtering**: Sort tasks by Date or Priority; filter by All, Pending, or Completed status with a polished, aligned UI.
+-   **Dark Mode**: Full system-wide dark mode support that persists across app reloads.
 -   **Native Experience**: Optimized for Android (APK) and iOS using Expo.
 
 ## 🛠️ Technology Stack
@@ -23,13 +24,14 @@ A premium, feature-rich Todo List application built with **React Native** and **
 -   **API Client**: [Axios](https://axios-http.com/) with JWT interceptors
 -   **Storage**: [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/secure-store/)
 -   **UI Components**: [react-native-calendars](https://github.com/wix/react-native-calendars), Ionicons
--   **Backend**: Spring Boot REST API (Deployed on Render)
+-   **Backend**: [Supabase](https://supabase.com/) (PostgreSQL & Go)
+-   **Authentication**: Supabase Auth (GoTrue)
 
 ## 📲 Download the App
 
 You can download the latest Android APK directly from the link below:
 
-**[Download To Do APK (v1.0.5)](https://expo.dev/artifacts/eas/8djGeA7YzG5hHf6zdya3v2.apk)**
+**[Download To Do APK (v1.0.6)](https://expo.dev/artifacts/eas/mSRXvYai1Cb3koo8GmGt3k.apk)**
 
 ## 📦 Installation & Setup
 
@@ -60,8 +62,8 @@ npx eas-cli build -p android --profile preview
 
 ## 🌐 Backend Reference
 
-The app connects to the following production API:
-`https://todo-backend-lldg.onrender.com/api`
+The app is powered by **Supabase**.
+Reference: `https://vynchejvskgtxiybttoc.supabase.co`
 
 ---
 *Created by [Nishanth Kumar](https://github.com/nishanthkumarbs)*
