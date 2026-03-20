@@ -69,7 +69,7 @@ export async function scheduleTaskNotification(task) {
   try {
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
-        title: "⏰ Task Reminder",
+        title: "Task Reminder",
         body: `It's time for: ${task.title}`,
         data: { todoId: task.id },
         sound: true,
@@ -78,6 +78,7 @@ export async function scheduleTaskNotification(task) {
       trigger: {
         date: triggerDate,
         channelId: Platform.OS === 'android' ? 'task-reminders' : undefined,
+        precision: 'exact',
       },
     });
     return identifier;

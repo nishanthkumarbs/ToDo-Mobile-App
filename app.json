@@ -21,7 +21,14 @@
         "backgroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-foreground.png"
       },
-      "package": "com.devdrifter.ToDoMobile"
+      "package": "com.devdrifter.ToDoMobile",
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +43,6 @@
       ],
       "@react-native-community/datetimepicker"
     ],
-    "permissions": ["USE_EXACT_ALARM"],
     "extra": {
       "eas": {
         "projectId": "8f5c6ac8-410e-4de9-a1eb-471d47561c0d"
