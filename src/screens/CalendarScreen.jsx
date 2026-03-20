@@ -87,7 +87,7 @@ export default function CalendarScreen({ navigation, isDark }) {
           </Text>
           {item.reminder && (
             <Text style={[styles.todoDate, { color: theme.warning }]}>
-               <Ionicons name="notifications-outline" size={12} /> {new Date(item.reminder).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+               {new Date(item.reminder).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           )}
         </View>
