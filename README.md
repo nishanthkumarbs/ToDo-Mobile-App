@@ -31,7 +31,7 @@ A premium, feature-rich Todo List application built with **React Native** and **
 
 You can download the latest Android APK directly from the link below:
 
-**[Download To Do APK (v1.0.7)](https://expo.dev/artifacts/eas/kFpVpHwrJycThwiavrCFxM.apk)**
+**[Download To Do APK (v1.0.8)](https://expo.dev/artifacts/eas/kZfGPEnd3bVEuAoj8hS71P.apk)**
 
 ## 📦 Installation & Setup
 
