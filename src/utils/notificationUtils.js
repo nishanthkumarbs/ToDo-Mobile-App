@@ -58,16 +58,24 @@ export async function initNotifications() {
 
 /**
  * Schedules a single notification for a task.
+ * Using task.id as identifier ensures we don't have duplicate notifications for the same task.
  */
 export async function scheduleTaskNotification(task) {
   const Notifications = getNotifications();
   if (!Notifications || !task.reminder || task.completed) return null;
 
   const triggerDate = new Date(task.reminder);
-  if (triggerDate <= new Date()) return null;
+  const now = new Date();
+
+  // Don't schedule if date is invalid or in the past
+  if (isNaN(triggerDate.getTime()) || triggerDate <= now) {
+    return null;
+  }
 
   try {
+    // Overwrite any existing notification for this task ID
     const identifier = await Notifications.scheduleNotificationAsync({
+      identifier: String(task.id),
       content: {
         title: "Task Reminder",
         body: `It's time for: ${task.title}`,
@@ -86,6 +94,15 @@ export async function scheduleTaskNotification(task) {
     console.error("Error scheduling notification:", error);
     return null;
   }
+}
+
+/**
+ * Cancels a specific task notification.
+ */
+export async function cancelTaskNotification(taskId) {
+  const Notifications = getNotifications();
+  if (!Notifications || !taskId) return;
+  await Notifications.cancelScheduledNotificationAsync(String(taskId));
 }
 
 /**
