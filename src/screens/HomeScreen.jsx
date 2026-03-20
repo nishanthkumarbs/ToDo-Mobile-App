@@ -572,9 +572,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
+    borderRadius: 16,
+    marginBottom: 12,
     borderWidth: 1,
+    // Add subtle shadow/elevation
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   todoItemLeft: {
     flexDirection: 'row',
@@ -582,8 +588,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   checkboxTouch: {
-    padding: 8,
-    marginLeft: -8,
+    padding: 4,
+    marginLeft: -4,
   },
   todoTextContainer: {
     marginLeft: 12,
@@ -605,6 +611,11 @@ const styles = StyleSheet.create({
   priorityText: {
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 100, // Space for FAB
   },
   emptyContainer: {
     padding: 32,
